@@ -1,1 +1,1 @@
-# computer-vision-and-deep-learning
+# computer-vision-course
