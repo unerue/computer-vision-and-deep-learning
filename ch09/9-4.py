@@ -6,6 +6,7 @@ import os
 import random
 import cv2
 
+
 input_dir = "./datasets/oxford_pets/images/images/"
 target_dir = "./datasets/oxford_pets/annotations/annotations/trimaps/"
 img_siz = (160, 160)  # 모델에 입력되는 영상 크기

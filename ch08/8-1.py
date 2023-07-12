@@ -14,22 +14,33 @@ x_test = x_test.astype(np.float32) / 255.0
 y_train = tf.keras.utils.to_categorical(y_train, 10)
 y_test = tf.keras.utils.to_categorical(y_test, 10)
 
-cnn = Sequential()
-cnn.add(Conv2D(6, (5, 5), padding="same", activation="relu", input_shape=(28, 28, 1)))
-cnn.add(MaxPooling2D(pool_size=(2, 2), strides=2))
-cnn.add(Conv2D(16, (5, 5), padding="valid", activation="relu"))
-cnn.add(MaxPooling2D(pool_size=(2, 2), strides=2))
-cnn.add(Conv2D(120, (5, 5), padding="valid", activation="relu"))
-cnn.add(Flatten())
-cnn.add(Dense(units=84, activation="relu"))
-cnn.add(Dense(units=10, activation="softmax"))
+# cnn = Sequential()
+# cnn.add(Conv2D(6, (5, 5), padding="same", activation="relu", input_shape=(28, 28, 1)))
+# cnn.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+# cnn.add(Conv2D(16, (5, 5), padding="valid", activation="relu"))
+# cnn.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+# cnn.add(Conv2D(120, (5, 5), padding="valid", activation="relu"))
+# cnn.add(Flatten())
+# cnn.add(Dense(units=84, activation="relu"))
+# cnn.add(Dense(units=10, activation="softmax"))
 
-cnn.compile(
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(6, (5, 5), padding="same", activation="relu", input_shape=(28, 28, 1)),
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Conv2D(16, (5, 5), padding="valid", activation="relu"),
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Conv2D(120, (5, 5), padding="valid", activation="relu"),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(units=84, activation="relu"),
+    tf.keras.layers.Dense(units=10, activation="softmax"),
+])
+
+model.compile(
     loss="categorical_crossentropy",
     optimizer=Adam(learning_rate=0.001),
     metrics=["accuracy"],
 )
-cnn.fit(
+model.fit(
     x_train,
     y_train,
     batch_size=128,
@@ -38,5 +49,5 @@ cnn.fit(
     verbose=2,
 )
 
-res = cnn.evaluate(x_test, y_test, verbose=0)
+res = model.evaluate(x_test, y_test, verbose=0)
 print("정확률=", res[1] * 100)
