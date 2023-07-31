@@ -1,10 +1,13 @@
 import tensorflow as tf
-import tensorflow.keras.datasets as ds
 import matplotlib.pyplot as plt
+from torchvision import datasets
 
 
-(x_train, y_train), (x_test, y_test) = ds.mnist.load_data()
+datasets.MNIST()
+
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
+
 plt.figure(figsize=(24, 3))
 plt.suptitle("MNIST", fontsize=30)
 for i in range(10):
@@ -13,8 +16,9 @@ for i in range(10):
     plt.xticks([])
     plt.yticks([])
     plt.title(str(y_train[i]), fontsize=30)
+plt.show()
 
-(x_train, y_train), (x_test, y_test) = ds.cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
 class_names = [
     "airplane",
@@ -28,6 +32,8 @@ class_names = [
     "ship",
     "truck",
 ]
+
+trainset = datasets.MNIST(train=False, download=True)
 plt.figure(figsize=(24, 3))
 plt.suptitle("CIFAR-10", fontsize=30)
 for i in range(10):
@@ -36,3 +42,4 @@ for i in range(10):
     plt.xticks([])
     plt.yticks([])
     plt.title(class_names[y_train[i, 0]], fontsize=30)
+plt.show()

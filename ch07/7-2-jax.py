@@ -1,12 +1,8 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.datasets as ds
-from tensorflow.keras import Sequential
-from tensorflow.keras import layers
-from tensorflow.keras.optimizers import SGD
 
 
-(x_train, y_train), (x_test, y_test) = ds.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 x_train = x_train.reshape(60000, 784)
 x_test = x_test.reshape(10000, 784)
 x_train = x_train.astype(np.float32) / 255.0
@@ -18,10 +14,6 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(512, activation="tanh", input_shape=(784,)),
     tf.keras.layers.Dense(10, activation="softmax"),
 ])
-# mlp = Sequential()
-# mlp.add(Dense(units=512, activation="tanh", input_shape=(784,)))
-# mlp.add(Dense(units=10, activation="softmax"))
-# tf.keras.losses.M
 
 model.compile(
     loss=tf.losses.MSE,

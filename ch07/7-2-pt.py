@@ -1,13 +1,15 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.datasets as ds
-from tensorflow.keras import Sequential
-from tensorflow.keras import layers
-from tensorflow.keras.optimizers import SGD
 import torch
 from torch import nn
-
+from torchvision import datasets
 import lightning as L
+
+
+trainset = datasets.MNIST()
+testset = datasets.MNIST(train=False)
+
+
 
 
 (x_train, y_train), (x_test, y_test) = ds.mnist.load_data()
