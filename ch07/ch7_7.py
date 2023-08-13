@@ -1,9 +1,9 @@
-import numpy as np
-import tensorflow as tf
-import cv2
-import matplotlib.pyplot as plt
 import winsound
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 
 model = tf.keras.models.load_model("dmlp_trained.h5")
 

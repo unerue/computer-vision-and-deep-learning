@@ -37,7 +37,7 @@ hist = model.fit(
     x_train,
     y_train,
     batch_size=128,
-    epochs=5,
+    epochs=50,
     validation_data=(x_test, y_test),
     verbose=2,
 )
