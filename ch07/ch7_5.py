@@ -37,7 +37,7 @@ hist = model.fit(
     x_train,
     y_train,
     batch_size=128,
-    epochs=50,
+    epochs=5,
     validation_data=(x_test, y_test),
     verbose=2,
 )
@@ -47,8 +47,8 @@ model.save("dmlp_trained.h5")
 
 import matplotlib.pyplot as plt
 
-plt.plot(hist.history["accuracy"])
-plt.plot(hist.history["val_accuracy"])
+plt.plot(hist.history["categorical_accuracy"])
+plt.plot(hist.history["val_categorical_accuracy"])
 plt.title("Accuracy graph")
 plt.xlabel("epochs")
 plt.ylabel("accuracy")
