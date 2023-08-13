@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn
-from torchvision.transforms import ToTensor
 
 torch.set_float32_matmul_precision('medium')
 
@@ -76,9 +75,8 @@ def show():
 def recognition():
     numerals = grab_numerals()
     numerals = numerals.reshape(5, 784)
-    transform = ToTensor()
-    numerals = transform(numerals)
-    numerals = numerals.to(device).squeeze(0)
+    numerals = numerals.astype(np.float32)
+    numerals = torch.from_numpy(numerals).to(device) / 255.0
     res = model(numerals)  # 신경망 모델로 예측
     res = res.cpu().detach().numpy()
     class_id = np.argmax(res, axis=1)
