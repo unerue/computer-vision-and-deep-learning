@@ -1,15 +1,9 @@
 import numpy as np
 import tensorflow as tf
-import torch
-from torch import nn
-from torchvision import datasets
-import lightning as L
-
-
-trainset = datasets.MNIST()
-testset = datasets.MNIST(train=False)
-
-
+import tensorflow.keras.datasets as ds
+from tensorflow.keras import Sequential
+from tensorflow.keras import layers
+from tensorflow.keras.optimizers import SGD
 
 
 (x_train, y_train), (x_test, y_test) = ds.mnist.load_data()
@@ -24,18 +18,10 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(512, activation="tanh", input_shape=(784,)),
     tf.keras.layers.Dense(10, activation="softmax"),
 ])
-
-model = nn.Sequential([
-    nn.Linear(784, 512),
-    nn.Tanh(),
-    nn.Linear(512, 10),
-    nn.Softmax(),
-])
-
-trainer = L.Trainer(
-    model, L.MSE(), L.SGD(learning_rate=0.01), L.CategoricalAccuracy()
-)
-trainer.fit()
+# mlp = Sequential()
+# mlp.add(Dense(units=512, activation="tanh", input_shape=(784,)))
+# mlp.add(Dense(units=10, activation="softmax"))
+# tf.keras.losses.M
 
 model.compile(
     loss=tf.losses.MSE,

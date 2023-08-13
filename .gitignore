@@ -1,3 +1,8 @@
+data/
+lightning_logs/
+
 *.h5
 *.weights
 *.pb
+*.pth
+*.ckpt
