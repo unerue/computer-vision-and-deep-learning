@@ -3,7 +3,7 @@ from collections import defaultdict
 import lightning as L
 import torch
 import torch.nn.functional as F
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
