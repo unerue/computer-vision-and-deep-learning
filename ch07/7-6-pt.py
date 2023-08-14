@@ -14,7 +14,7 @@ class SequentialModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.reshape = nn.Flatten()
-        self.dmlp = nn.Sequential(
+        self.model = nn.Sequential(
             nn.Linear(3072, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
@@ -26,7 +26,7 @@ class SequentialModel(nn.Module):
 
     def forward(self, x):
         x = self.reshape(x)
-        x = self.dmlp(x)
+        x = self.model(x)
         return x
 
 

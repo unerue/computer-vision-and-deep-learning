@@ -17,7 +17,7 @@ class SequentialModule(L.LightningModule):
     def __init__(self):
         super().__init__()
         self.reshape = nn.Flatten()
-        self.dmlp = nn.Sequential(
+        self.model = nn.Sequential(
             nn.Linear(3072, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
@@ -37,11 +37,11 @@ class SequentialModule(L.LightningModule):
         self.history = defaultdict(list)
 
     def configure_optimizers(self):
-        return optim.Adam(self.dmlp.parameters(), lr=0.0001)
+        return optim.Adam(self.model.parameters(), lr=0.0001)
 
     def forward(self, x):
         x = self.reshape(x)
-        x = self.dmlp(x)
+        x = self.model(x)
         return x
 
     def training_step(self, batch, batch_idx):
