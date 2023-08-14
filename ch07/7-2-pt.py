@@ -99,5 +99,5 @@ torch.save(model.state_dict(), 'mnist-net.pth')
 model = SequentialModel().to(device)
 model.load_state_dict(torch.load('mnist-net.pth'))
 
-test_acc = test(test_loader, device, model, metric)
-print('정확률=', test_acc * 100)
+res = test(test_loader, device, model, metric)
+print('정확률=', res * 100)

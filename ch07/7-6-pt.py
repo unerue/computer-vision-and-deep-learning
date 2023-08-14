@@ -126,8 +126,7 @@ torch.save(dmlp.state_dict(), 'dmlp_trained.pth')
 dmlp = SequentialModel().to(device)
 dmlp.load_state_dict(torch.load('dmlp_trained.pth'))
 
-test_acc = test(test_loader, device, dmlp, metric)
-print('정확률=', test_acc * 100)
+print('정확률=', test(test_loader, device, dmlp, metric) * 100)
 
 plt.plot(history['accuracy'])
 plt.plot(history['val_accuracy'])
