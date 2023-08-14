@@ -21,7 +21,7 @@ for i in range(10):
     plt.imshow(train_data.data[i], cmap="gray")
     plt.xticks([])
     plt.yticks([])
-    plt.title(str(train_data.targets.numpy()[i]), fontsize=30)
+    plt.title(str(train_data.targets[i].item()), fontsize=30)
 plt.show()
 
 train_data = CIFAR10(

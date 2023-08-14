@@ -17,7 +17,7 @@ class SequentialModule(L.LightningModule):
     def __init__(self):
         super().__init__()
         self.reshape = nn.Flatten()
-        self.model = nn.Sequential(
+        self.dmlp = nn.Sequential(
             nn.Linear(3072, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
@@ -37,11 +37,11 @@ class SequentialModule(L.LightningModule):
         self.history = defaultdict(list)
 
     def configure_optimizers(self):
-        return optim.Adam(self.model.parameters(), lr=0.0001)
+        return optim.Adam(self.dmlp.parameters(), lr=0.0001)
 
     def forward(self, x):
         x = self.reshape(x)
-        x = self.model(x)
+        x = self.dmlp(x)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -116,17 +116,17 @@ test_data = CIFAR10(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-model = SequentialModule()
+dmlp = SequentialModule()
 trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=50)
-trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+trainer.fit(dmlp, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
 # trainer.save_checkpoint('dmlp_trained.ckpt')
-# trainer.test(model, dataloaders=test_loader, ckpt_path='dmlp_trained.ckpt')
+# trainer.test(dmlp, dataloaders=test_loader, ckpt_path='dmlp_trained.ckpt')
 
-trainer.test(model, dataloaders=test_loader, ckpt_path='last')
+trainer.test(dmlp, dataloaders=test_loader, ckpt_path='last')
 
-plt.plot(model.history['accuracy'])
-plt.plot(model.history['val_accuracy'])
+plt.plot(dmlp.history['accuracy'])
+plt.plot(dmlp.history['val_accuracy'])
 plt.title('Accuracy graph')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
@@ -134,8 +134,8 @@ plt.legend(['train', 'test'])
 plt.grid()
 plt.show()
 
-plt.plot(model.history['loss'])
-plt.plot(model.history['val_loss'])
+plt.plot(dmlp.history['loss'])
+plt.plot(dmlp.history['val_loss'])
 plt.title('Loss graph')
 plt.xlabel('epochs')
 plt.ylabel('loss')
