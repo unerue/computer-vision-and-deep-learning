@@ -10,6 +10,7 @@ from torchmetrics import Accuracy
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
+
 torch.set_float32_matmul_precision('medium')
 
 
