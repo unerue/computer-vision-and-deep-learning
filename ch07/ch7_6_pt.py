@@ -14,7 +14,7 @@ class SequentialModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.reshape = nn.Flatten()
-        self.model = nn.Sequential(
+        self.dmlp = nn.Sequential(
             nn.Linear(3072, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
@@ -26,7 +26,7 @@ class SequentialModel(nn.Module):
 
     def forward(self, x):
         x = self.reshape(x)
-        x = self.model(x)
+        x = self.dmlp(x)
         return x
 
 
@@ -104,29 +104,29 @@ train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = SequentialModel().to(device)
+dmlp = SequentialModel().to(device)
 loss_fn = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
+optimizer = optim.Adam(dmlp.parameters(), lr=0.0001)
 metric = Accuracy(task='multiclass', num_classes=10).to(device)
 
 max_epochs = 50
 history = defaultdict(list)
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
-    train_loss, train_acc = training_epoch(train_loader, device, model, loss_fn, optimizer, metric)
-    val_loss, val_acc = validation(test_loader, device, model, metric)
+    train_loss, train_acc = training_epoch(train_loader, device, dmlp, loss_fn, optimizer, metric)
+    val_loss, val_acc = validation(test_loader, device, dmlp, metric)
     print('val 정확률=', val_acc * 100, '\n')
     history['loss'].append(train_loss)
     history['accuracy'].append(train_acc)
     history['val_loss'].append(val_loss)
     history['val_accuracy'].append(val_acc)
 
-torch.save(model.state_dict(), 'dmlp_trained.pth')
+torch.save(dmlp.state_dict(), 'dmlp_trained.pth')
 
-model = SequentialModel().to(device)
-model.load_state_dict(torch.load('dmlp_trained.pth'))
+dmlp = SequentialModel().to(device)
+dmlp.load_state_dict(torch.load('dmlp_trained.pth'))
 
-test_acc = test(test_loader, device, model, metric)
+test_acc = test(test_loader, device, dmlp, metric)
 print('정확률=', test_acc * 100)
 
 plt.plot(history['accuracy'])
