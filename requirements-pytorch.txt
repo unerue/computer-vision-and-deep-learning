@@ -3,3 +3,4 @@ torchvision
 lightning
 matplotlib
 opencv-python
+PyQt5

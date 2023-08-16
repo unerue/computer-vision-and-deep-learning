@@ -1,33 +1,37 @@
+import pathlib
+import pickle
 from collections import defaultdict
 
 import lightning as L
 import torch
 import matplotlib.pyplot as plt
 from torch import nn, optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
-from torchvision.datasets import MNIST
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torchvision.models.densenet import DenseNet121_Weights, densenet121
 from torchvision.transforms import ToTensor
 
 
 torch.set_float32_matmul_precision('medium')
 
 
-class SequentialModule(L.LightningModule):
+class CNNModule(L.LightningModule):
     def __init__(self):
         super().__init__()
-        self.reshape = nn.Flatten()
+        base_model = densenet121(weights=DenseNet121_Weights.IMAGENET1K_V1)
         self.model = nn.Sequential(
-            nn.Linear(784, 1024),
+            base_model.features,
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Flatten(),
+            nn.Linear(50176, 1024),
             nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10),
+            nn.Dropout(0.75),
+            nn.Linear(1024, 120),
         )
         self.loss = nn.CrossEntropyLoss()
-        self.metric = Accuracy(task='multiclass', num_classes=10)
+        self.metric = Accuracy(task='multiclass', num_classes=120)
         
         self.train_loss_list = []
         self.train_acc_list = []
@@ -37,10 +41,9 @@ class SequentialModule(L.LightningModule):
         self.history = defaultdict(list)
 
     def configure_optimizers(self):
-        return optim.Adam(self.model.parameters(), lr=0.0001)
+        return optim.Adam(self.model.parameters(), lr=0.000001)
 
     def forward(self, x):
-        x = self.reshape(x)
         x = self.model(x)
         return x
 
@@ -99,32 +102,35 @@ class SequentialModule(L.LightningModule):
         self.log_dict(logs, prog_bar=True)
 
 
-train_data = MNIST(
-    root='data',
-    train=True,
-    download=True,
-    transform=ToTensor(),
+data_path = pathlib.Path('datasets/stanford_dogs/images/images')
+
+transform = transforms.Compose([
+    ToTensor(),
+    transforms.Resize((224, 224), antialias=True),
+])
+
+ds = ImageFolder(
+    data_path,
+    transform=transform,
 )
-test_data = MNIST(
-    root='data',
-    train=False,
-    download=True,
-    transform=ToTensor(),
-)
-train_loader = DataLoader(train_data, batch_size=128)
-test_loader = DataLoader(test_data, batch_size=128)
+test_ds, train_ds = random_split(ds, [0.2, 0.8], generator=torch.Generator().manual_seed(123))
+train_loader = DataLoader(train_ds, batch_size=16)
+test_loader = DataLoader(test_ds, batch_size=16)
 
-model = SequentialModule()
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=50)
-trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+cnn = CNNModule()
+trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=200)
+trainer.fit(cnn, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-trainer.save_checkpoint('dmlp_trained.ckpt')
-trainer.test(model, dataloaders=test_loader, ckpt_path='dmlp_trained.ckpt')
+trainer.save_checkpoint('cnn_for_stanford_dogs.ckpt')
+trainer.test(cnn, dataloaders=test_loader, ckpt_path='cnn_for_stanford_dogs.ckpt')
 
-# trainer.test(model, dataloaders=test_loader, ckpt_path='last')
+# trainer.test(cnn, dataloaders=test_loader, ckpt_path='last')
 
-plt.plot(model.history['accuracy'])
-plt.plot(model.history['val_accuracy'])
+with open('dog_species_names.txt', 'wb') as f:
+    pickle.dump(ds.classes, f)
+
+plt.plot(cnn.history['accuracy'])
+plt.plot(cnn.history['val_accuracy'])
 plt.title('Accuracy graph')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
@@ -132,8 +138,8 @@ plt.legend(['train', 'test'])
 plt.grid()
 plt.show()
 
-plt.plot(model.history['loss'])
-plt.plot(model.history['val_loss'])
+plt.plot(cnn.history['loss'])
+plt.plot(cnn.history['val_loss'])
 plt.title('Loss graph')
 plt.xlabel('epochs')
 plt.ylabel('loss')

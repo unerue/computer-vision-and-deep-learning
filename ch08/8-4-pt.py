@@ -1,38 +1,43 @@
-import winsound
+# import winsound
 
 import cv2
-import lightning as L
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn
 
 
-torch.set_float32_matmul_precision('medium')
-
-
-class SequentialModule(L.LightningModule):
+class SequentialModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.reshape = nn.Flatten()
         self.model = nn.Sequential(
-            nn.Linear(784, 1024),
+            nn.Conv2d(1, 32, 3),
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Conv2d(32, 32, 3),
             nn.ReLU(),
-            nn.Linear(512, 512),
+            nn.MaxPool2d(2, 2),
+            nn.Dropout(0.25),
+            nn.Conv2d(32, 64, 5),
             nn.ReLU(),
+            nn.Conv2d(64, 64, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Dropout(0.25),
+            nn.Flatten(),
+            nn.Linear(576, 512),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(512, 10),
         )
 
     def forward(self, x):
-        x = self.reshape(x)
         x = self.model(x)
         return x
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = SequentialModule.load_from_checkpoint('dmlp_trained.ckpt').to(device)
+model = SequentialModel().to(device)
+model.load_state_dict(torch.load('cnn_v2.pth'))
 
 
 def reset():
@@ -75,7 +80,7 @@ def show():
 
 def recognition():
     numerals = grab_numerals()
-    numerals = numerals.reshape(5, 784)
+    numerals = numerals.reshape(5, 1, 28, 28)
     numerals = numerals.astype(np.float32)
     numerals = torch.from_numpy(numerals).to(device) / 255.0
     res = model(numerals)  # 신경망 모델로 예측
@@ -91,7 +96,7 @@ def recognition():
             (255, 0, 0),
             1,
         )
-    winsound.Beep(1000, 500)
+    # winsound.Beep(1000, 500)
 
 
 BrushSiz = 4

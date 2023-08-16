@@ -1,30 +1,35 @@
+import pathlib
+import pickle
 from collections import defaultdict
 
-import torch
 import matplotlib.pyplot as plt
+import torch
 from torch import nn, optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
-from torchvision.datasets import MNIST
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torchvision.models.densenet import DenseNet121_Weights, densenet121
 from torchvision.transforms import ToTensor
 
 
-class SequentialModel(nn.Module):
+class CNNModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.reshape = nn.Flatten()
+
+        base_model = densenet121(weights=DenseNet121_Weights.IMAGENET1K_V1)
+
         self.model = nn.Sequential(
-            nn.Linear(784, 1024),
+            base_model.features,
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Flatten(),
+            nn.Linear(50176, 1024),
             nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10),
+            nn.Dropout(0.75),
+            nn.Linear(1024, 120),
         )
 
     def forward(self, x):
-        x = self.reshape(x)
         x = self.model(x)
         return x
 
@@ -85,45 +90,48 @@ def test(dataloader, device, model, loss_fn, metric):
     return mean_acc
 
 
-train_data = MNIST(
-    root='data',
-    train=True,
-    download=True,
-    transform=ToTensor(),
+data_path = pathlib.Path('datasets/stanford_dogs/images/images')
+
+transform = transforms.Compose([
+    ToTensor(),
+    transforms.Resize((224, 224), antialias=True),
+])
+
+ds = ImageFolder(
+    data_path,
+    transform=transform,
 )
-test_data = MNIST(
-    root='data',
-    train=False,
-    download=True,
-    transform=ToTensor(),
-)
-train_loader = DataLoader(train_data, batch_size=128)
-test_loader = DataLoader(test_data, batch_size=128)
+test_ds, train_ds = random_split(ds, [0.2, 0.8], generator=torch.Generator().manual_seed(123))
+train_loader = DataLoader(train_ds, batch_size=16)
+test_loader = DataLoader(test_ds, batch_size=16)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = SequentialModel().to(device)
+cnn = CNNModel().to(device)
 loss_fn = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
-metric = Accuracy(task='multiclass', num_classes=10).to(device)
+optimizer = optim.Adam(cnn.parameters(), lr=0.000001)
+metric = Accuracy(task='multiclass', num_classes=120).to(device)
 
-max_epochs = 50
+max_epochs = 200
 history = defaultdict(list)
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
-    train_loss, train_acc = training_epoch(train_loader, device, model, loss_fn, optimizer, metric)
-    val_loss, val_acc = validation(test_loader, device, model, loss_fn, metric)
+    train_loss, train_acc = training_epoch(train_loader, device, cnn, loss_fn, optimizer, metric)
+    val_loss, val_acc = validation(test_loader, device, cnn, loss_fn, metric)
     print('val 정확률=', val_acc * 100, '\n')
     history['loss'].append(train_loss)
     history['accuracy'].append(train_acc)
     history['val_loss'].append(val_loss)
     history['val_accuracy'].append(val_acc)
 
-torch.save(model.state_dict(), 'dmlp_trained.pth')
+torch.save(cnn.state_dict(), 'cnn_for_stanford_dogs.pth')
 
-model = SequentialModel().to(device)
-model.load_state_dict(torch.load('dmlp_trained.pth'))
+cnn = CNNModel().to(device)
+cnn.load_state_dict(torch.load('cnn_for_stanford_dogs.pth'))
 
-print('정확률=', test(test_loader, device, model, loss_fn, metric) * 100)
+print('정확률=', test(test_loader, device, cnn, loss_fn, metric) * 100)
+
+with open('dog_species_names.txt', 'wb') as f:
+    pickle.dump(ds.classes, f)
 
 plt.plot(history['accuracy'])
 plt.plot(history['val_accuracy'])

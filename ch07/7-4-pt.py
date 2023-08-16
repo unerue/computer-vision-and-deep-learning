@@ -131,8 +131,7 @@ torch.save(model_adam.state_dict(), 'mnist-adam.pth')
 model_adam = SequentialModel().to(device)
 model_adam.load_state_dict(torch.load('mnist-adam.pth'))
 
-test_acc = test(test_loader, device, model_adam, metric)
-print('Adam 정확률=', test_acc * 100)
+print('Adam 정확률=', test(test_loader, device, model_adam, metric) * 100)
 
 plt.plot(hist_sgd['accuracy'], 'r--')
 plt.plot(hist_sgd['val_accuracy'], 'r')

@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
@@ -10,16 +9,22 @@ from torchvision.transforms import ToTensor
 class SequentialModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.reshape = nn.Flatten()
         self.model = nn.Sequential(
-            nn.Linear(784, 512),
-            nn.Tanh(),
-            nn.Linear(512, 10),
-            nn.Softmax(dim=1),
+            nn.Conv2d(1, 6, 5, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(6, 16, 5),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(16, 120, 5),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(120, 84),
+            nn.ReLU(),
+            nn.Linear(84, 10),
         )
 
     def forward(self, x):
-        x = self.reshape(x)
         x = self.model(x)
         return x
 
@@ -30,10 +35,9 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
     for batch, (x, y) in enumerate(dataloader):
         x = x.to(device)
         y = y.to(device)
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = model(x)
-        loss = loss_fn(y_hat, y_onehot)
+        loss = loss_fn(y_hat, y)
         acc = metric(y_hat, y)
 
         optimizer.zero_grad()
@@ -83,21 +87,21 @@ test_loader = DataLoader(test_data, batch_size=128)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = SequentialModel().to(device)
-loss_fn = nn.MSELoss()
-optimizer = optim.SGD(model.parameters(), lr=0.01)
+loss_fn = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 metric = Accuracy(task='multiclass', num_classes=10).to(device)
 
-max_epochs = 50
+max_epochs = 30
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
     training_epoch(train_loader, device, model, loss_fn, optimizer, metric)
     val_acc = validation(test_loader, device, model, metric)
     print('val 정확률=', val_acc * 100, '\n')
 
-torch.save(model.state_dict(), 'mnist-net.pth')
+torch.save(model.state_dict(), 'cnn_mnist.pth')
 
 model = SequentialModel().to(device)
-model.load_state_dict(torch.load('mnist-net.pth'))
+model.load_state_dict(torch.load('cnn_mnist.pth'))
 
 res = test(test_loader, device, model, metric)
 print('정확률=', res * 100)

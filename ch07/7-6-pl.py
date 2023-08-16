@@ -2,13 +2,13 @@ from collections import defaultdict
 
 import lightning as L
 import torch
-import torch.nn.functional as F
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor
+
 
 torch.set_float32_matmul_precision('medium')
 
@@ -17,7 +17,7 @@ class SequentialModule(L.LightningModule):
     def __init__(self):
         super().__init__()
         self.reshape = nn.Flatten()
-        self.dmlp = nn.Sequential(
+        self.model = nn.Sequential(
             nn.Linear(3072, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
@@ -37,19 +37,18 @@ class SequentialModule(L.LightningModule):
         self.history = defaultdict(list)
 
     def configure_optimizers(self):
-        return optim.Adam(self.dmlp.parameters(), lr=0.0001)
+        return optim.Adam(self.model.parameters(), lr=0.0001)
 
     def forward(self, x):
         x = self.reshape(x)
-        x = self.dmlp(x)
+        x = self.model(x)
         return x
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = self(x)
-        loss = self.loss(y_hat, y_onehot)
+        loss = self.loss(y_hat, y)
         acc = self.metric(y_hat, y)
         self.train_loss_list.append(loss)
         self.train_acc_list.append(acc)
@@ -69,10 +68,9 @@ class SequentialModule(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = self(x)
-        loss = self.loss(y_hat, y_onehot)
+        loss = self.loss(y_hat, y)
         acc = self.metric(y_hat, y)
         self.val_loss_list.append(loss)
         self.val_acc_list.append(acc)

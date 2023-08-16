@@ -30,21 +30,21 @@ for i in range(15):
     plt.title(class_names[int(y_train[i])])
 plt.show()
 
-batch_siz = 4  # 한 번에 생성하는 양(미니 배치)
+batch_size = 4  # 한 번에 생성하는 양(미니 배치)
 generator = ImageDataGenerator(
     rotation_range=20.0,
     width_shift_range=0.2,
     height_shift_range=0.2,
     horizontal_flip=True,
 )
-gen = generator.flow(x_train, y_train, batch_size=batch_siz)
+gen = generator.flow(x_train, y_train, batch_size=batch_size)
 
 for a in range(3):
     img, label = gen.next()  # 미니 배치만큼 생성
     plt.figure(figsize=(8, 2.4))
     plt.suptitle("Generatior trial " + str(a + 1))
-    for i in range(batch_siz):
-        plt.subplot(1, batch_siz, i + 1)
+    for i in range(batch_size):
+        plt.subplot(1, batch_size, i + 1)
         plt.imshow(img[i])
         plt.xticks([])
         plt.yticks([])
