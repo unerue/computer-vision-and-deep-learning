@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 import torch
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -14,18 +13,23 @@ class SequentialModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(1, 6, 5, padding=2),
+            nn.Conv2d(3, 32, 3),
+            nn.ReLU(),
+            nn.Conv2d(32, 32, 3),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(6, 16, 5),
+            nn.Dropout(0.25),
+            nn.Conv2d(32, 64, 5),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 3),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(16, 120, 5),
-            nn.ReLU(),
+            nn.Dropout(0.25),
             nn.Flatten(),
-            nn.Linear(120, 84),
+            nn.Linear(1024, 512),
             nn.ReLU(),
-            nn.Linear(84, 10),
+            nn.Dropout(0.5),
+            nn.Linear(512, 10),
         )
 
     def forward(self, x):
@@ -42,10 +46,9 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
     for batch, (x, y) in enumerate(dataloader):
         x = x.to(device)
         y = y.to(device)
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = model(x)
-        loss = loss_fn(y_hat, y_onehot)
+        loss = loss_fn(y_hat, y)
         total_loss += loss.item()
         acc = metric(y_hat, y)
         acc_list.append(acc)
@@ -73,10 +76,9 @@ def validation(dataloader, device, model, metric):
         for x, y in dataloader:
             x = x.to(device)
             y = y.to(device)
-            y_onehot = F.one_hot(y, num_classes=10).float()
 
             y_hat = model(x)
-            loss = loss_fn(y_hat, y_onehot)
+            loss = loss_fn(y_hat, y)
             total_loss += loss.item()
             acc = metric(y_hat, y)
             acc_list.append(acc)
@@ -107,29 +109,30 @@ train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-dmlp = SequentialModel().to(device)
+cnn = SequentialModel().to(device)
 loss_fn = nn.CrossEntropyLoss()
-optimizer = optim.Adam(dmlp.parameters(), lr=0.0001)
+optimizer = optim.Adam(cnn.parameters(), lr=0.001)
 metric = Accuracy(task='multiclass', num_classes=10).to(device)
 
-max_epochs = 50
+max_epochs = 100
 history = defaultdict(list)
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
-    train_loss, train_acc = training_epoch(train_loader, device, dmlp, loss_fn, optimizer, metric)
-    val_loss, val_acc = validation(test_loader, device, dmlp, metric)
+    train_loss, train_acc = training_epoch(train_loader, device, cnn, loss_fn, optimizer, metric)
+    val_loss, val_acc = validation(test_loader, device, cnn, metric)
     print('val 정확률=', val_acc * 100, '\n')
     history['loss'].append(train_loss)
     history['accuracy'].append(train_acc)
     history['val_loss'].append(val_loss)
     history['val_accuracy'].append(val_acc)
 
-torch.save(dmlp.state_dict(), 'dmlp_trained.pth')
+torch.save(cnn.state_dict(), 'cnn_cifar10.pth')
 
-dmlp = SequentialModel().to(device)
-dmlp.load_state_dict(torch.load('dmlp_trained.pth'))
+cnn = SequentialModel().to(device)
+cnn.load_state_dict(torch.load('cnn_cifar10.pth'))
 
-print('정확률=', test(test_loader, device, dmlp, metric) * 100)
+res = test(test_loader, device, cnn, metric)
+print('정확률=', res * 100)
 
 plt.plot(history['accuracy'])
 plt.plot(history['val_accuracy'])

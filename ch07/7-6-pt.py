@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 import torch
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -39,10 +38,9 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
     for batch, (x, y) in enumerate(dataloader):
         x = x.to(device)
         y = y.to(device)
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = model(x)
-        loss = loss_fn(y_hat, y_onehot)
+        loss = loss_fn(y_hat, y)
         total_loss += loss.item()
         acc = metric(y_hat, y)
         acc_list.append(acc)
@@ -61,7 +59,7 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
     return total_loss, mean_acc
 
 
-def validation(dataloader, device, model, metric):
+def validation(dataloader, device, model, loss_fn, metric):
     num_batches = len(dataloader)
     total_loss = 0
     acc_list = []
@@ -70,10 +68,9 @@ def validation(dataloader, device, model, metric):
         for x, y in dataloader:
             x = x.to(device)
             y = y.to(device)
-            y_onehot = F.one_hot(y, num_classes=10).float()
 
             y_hat = model(x)
-            loss = loss_fn(y_hat, y_onehot)
+            loss = loss_fn(y_hat, y)
             total_loss += loss.item()
             acc = metric(y_hat, y)
             acc_list.append(acc)
@@ -83,8 +80,8 @@ def validation(dataloader, device, model, metric):
     return total_loss, mean_acc
 
 
-def test(dataloader, device, model, metric):
-    _, mean_acc = validation(dataloader, device, model, metric)
+def test(dataloader, device, model, loss_fn, metric):
+    _, mean_acc = validation(dataloader, device, model, loss_fn, metric)
     return mean_acc
 
 
@@ -114,7 +111,7 @@ history = defaultdict(list)
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
     train_loss, train_acc = training_epoch(train_loader, device, dmlp, loss_fn, optimizer, metric)
-    val_loss, val_acc = validation(test_loader, device, dmlp, metric)
+    val_loss, val_acc = validation(test_loader, device, dmlp, loss_fn, metric)
     print('val 정확률=', val_acc * 100, '\n')
     history['loss'].append(train_loss)
     history['accuracy'].append(train_acc)
@@ -126,7 +123,7 @@ torch.save(dmlp.state_dict(), 'dmlp_trained.pth')
 dmlp = SequentialModel().to(device)
 dmlp.load_state_dict(torch.load('dmlp_trained.pth'))
 
-print('정확률=', test(test_loader, device, dmlp, metric) * 100)
+print('정확률=', test(test_loader, device, dmlp, loss_fn, metric) * 100)
 
 plt.plot(history['accuracy'])
 plt.plot(history['val_accuracy'])

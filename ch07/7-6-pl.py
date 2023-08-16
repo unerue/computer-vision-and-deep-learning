@@ -2,7 +2,6 @@ from collections import defaultdict
 
 import lightning as L
 import torch
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -47,10 +46,9 @@ class SequentialModule(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = self(x)
-        loss = self.loss(y_hat, y_onehot)
+        loss = self.loss(y_hat, y)
         acc = self.metric(y_hat, y)
         self.train_loss_list.append(loss)
         self.train_acc_list.append(acc)
@@ -70,10 +68,9 @@ class SequentialModule(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = self(x)
-        loss = self.loss(y_hat, y_onehot)
+        loss = self.loss(y_hat, y)
         acc = self.metric(y_hat, y)
         self.val_loss_list.append(loss)
         self.val_acc_list.append(acc)

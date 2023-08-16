@@ -1,8 +1,12 @@
 data/
 lightning_logs/
+ch08/datasets/
+ch09/datasets/
 
 *.h5
 *.weights
 *.pb
 *.pth
 *.ckpt
+*.tar
+*.tar.gz

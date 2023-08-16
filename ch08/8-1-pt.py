@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
@@ -36,10 +35,9 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
     for batch, (x, y) in enumerate(dataloader):
         x = x.to(device)
         y = y.to(device)
-        y_onehot = F.one_hot(y, num_classes=10).float()
 
         y_hat = model(x)
-        loss = loss_fn(y_hat, y_onehot)
+        loss = loss_fn(y_hat, y)
         acc = metric(y_hat, y)
 
         optimizer.zero_grad()
@@ -93,7 +91,7 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 metric = Accuracy(task='multiclass', num_classes=10).to(device)
 
-max_epochs = 50
+max_epochs = 30
 for t in range(max_epochs):
     print(f'Epoch {t+1}\n-------------------------------')
     training_epoch(train_loader, device, model, loss_fn, optimizer, metric)

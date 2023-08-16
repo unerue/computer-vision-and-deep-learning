@@ -14,18 +14,23 @@ class SequentialModule(L.LightningModule):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(1, 6, 5, padding=2),
+            nn.Conv2d(1, 32, 3),
+            nn.ReLU(),
+            nn.Conv2d(32, 32, 3),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(6, 16, 5),
+            nn.Dropout(0.25),
+            nn.Conv2d(32, 64, 5),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 3),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(16, 120, 5),
-            nn.ReLU(),
+            nn.Dropout(0.25),
             nn.Flatten(),
-            nn.Linear(120, 84),
+            nn.Linear(576, 512),
             nn.ReLU(),
-            nn.Linear(84, 10),
+            nn.Dropout(0.5),
+            nn.Linear(512, 10),
         )
         self.loss = nn.MSELoss()
         self.metric = Accuracy(task='multiclass', num_classes=10)
@@ -93,8 +98,11 @@ test_data = MNIST(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-model = SequentialModule()
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=30)
-trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+cnn = SequentialModule()
+trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=5)
+trainer.fit(cnn, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-trainer.test(model, dataloaders=test_loader, ckpt_path='last')
+trainer.save_checkpoint('cnn_v2.ckpt')
+trainer.test(cnn, dataloaders=test_loader, ckpt_path='cnn_v2.ckpt')
+
+# trainer.test(cnn, dataloaders=test_loader, ckpt_path='last')
