@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 
 
 train_data = MNIST(
-    root='data',
+    root="data",
     train=True,
     download=True,
 )
 test_data = MNIST(
-    root='data',
+    root="data",
     train=False,
     download=True,
 )
@@ -25,12 +25,12 @@ for i in range(10):
 plt.show()
 
 train_data = CIFAR10(
-    root='data',
+    root="data",
     train=True,
     download=True,
 )
 test_data = CIFAR10(
-    root='data',
+    root="data",
     train=False,
     download=True,
 )

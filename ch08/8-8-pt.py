@@ -33,21 +33,21 @@ class CNNModel(nn.Module):
         return x
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 cnn = CNNModel().to(device)
-cnn.load_state_dict(torch.load('cnn_for_stanford_dogs.pth'))  # 모델 읽기
-dog_species = pickle.load(open('dog_species_names.txt', 'rb'))  # 견종 이름
+cnn.load_state_dict(torch.load("cnn_for_stanford_dogs.pth"))  # 모델 읽기
+dog_species = pickle.load(open("dog_species_names.txt", "rb"))  # 견종 이름
 
 
 class DogSpeciesRecognition(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('견종 인식')
+        self.setWindowTitle("견종 인식")
         self.setGeometry(200, 200, 700, 100)
 
-        fileButton = QPushButton('강아지 사진 열기', self)
-        recognitionButton = QPushButton('품종 인식', self)
-        quitButton = QPushButton('나가기', self)
+        fileButton = QPushButton("강아지 사진 열기", self)
+        recognitionButton = QPushButton("품종 인식", self)
+        quitButton = QPushButton("나가기", self)
 
         fileButton.setGeometry(10, 10, 100, 30)
         recognitionButton.setGeometry(110, 10, 100, 30)
@@ -58,12 +58,12 @@ class DogSpeciesRecognition(QMainWindow):
         quitButton.clicked.connect(self.quitFunction)
 
     def pictureOpenFunction(self):
-        fname = QFileDialog.getOpenFileName(self, '강아지 사진 읽기', './')
+        fname = QFileDialog.getOpenFileName(self, "강아지 사진 읽기", "./")
         self.img = cv2.imread(fname[0])
         if self.img is None:
-            sys.exit('파일을 찾을 수 없습니다.')
+            sys.exit("파일을 찾을 수 없습니다.")
 
-        cv2.imshow('Dog image', self.img)
+        cv2.imshow("Dog image", self.img)
 
     def recognitionFunction(self):
         transform = transforms.Compose([
@@ -78,8 +78,8 @@ class DogSpeciesRecognition(QMainWindow):
         top5 = np.argsort(-res)[:5]
         top5_dog_species_names = [dog_species[i] for i in top5]
         for i in range(5):
-            prob = '(' + str(res[top5[i]]) + ')'
-            name = str(top5_dog_species_names[i]).split('-')[1]
+            prob = "(" + str(res[top5[i]]) + ")"
+            name = str(top5_dog_species_names[i]).split("-")[1]
             cv2.putText(
                 self.img,
                 prob + name,
@@ -89,7 +89,7 @@ class DogSpeciesRecognition(QMainWindow):
                 (255, 255, 255),
                 2,
             )
-        cv2.imshow('Dog image', self.img)
+        cv2.imshow("Dog image", self.img)
         # winsound.Beep(1000, 500)
 
     def quitFunction(self):

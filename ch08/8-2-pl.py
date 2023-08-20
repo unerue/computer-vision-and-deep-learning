@@ -10,7 +10,7 @@ from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor
 
 
-torch.set_float32_matmul_precision('medium')
+torch.set_float32_matmul_precision("medium")
 
 
 class SequentialModule(L.LightningModule):
@@ -21,13 +21,13 @@ class SequentialModule(L.LightningModule):
             nn.ReLU(),
             nn.Conv2d(32, 32, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Conv2d(32, 64, 5),
             nn.ReLU(),
             nn.Conv2d(64, 64, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Flatten(),
             nn.Linear(1024, 512),
@@ -36,7 +36,7 @@ class SequentialModule(L.LightningModule):
             nn.Linear(512, 10),
         )
         self.loss = nn.CrossEntropyLoss()
-        self.metric = Accuracy(task='multiclass', num_classes=10)
+        self.metric = Accuracy(task="multiclass", num_classes=10)
         
         self.train_loss_list = []
         self.train_acc_list = []
@@ -61,7 +61,7 @@ class SequentialModule(L.LightningModule):
         self.train_loss_list.append(loss)
         self.train_acc_list.append(acc)
 
-        logs = {'train_loss': loss, 'train_acc': acc}
+        logs = {"train_loss": loss, "train_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return loss
@@ -69,8 +69,8 @@ class SequentialModule(L.LightningModule):
     def on_train_epoch_end(self):
         mean_loss = torch.tensor(self.train_loss_list).mean().item()
         mean_acc = torch.tensor(self.train_acc_list).mean().item()
-        self.history['loss'].append(mean_loss)
-        self.history['accuracy'].append(mean_acc)
+        self.history["loss"].append(mean_loss)
+        self.history["accuracy"].append(mean_acc)
         self.train_loss_list.clear()
         self.train_acc_list.clear()
 
@@ -83,7 +83,7 @@ class SequentialModule(L.LightningModule):
         self.val_loss_list.append(loss)
         self.val_acc_list.append(acc)
 
-        logs = {'val_acc': acc}
+        logs = {"val_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return logs
@@ -91,9 +91,9 @@ class SequentialModule(L.LightningModule):
     def on_validation_epoch_end(self):
         mean_loss = torch.tensor(self.val_loss_list).mean().item()
         mean_acc = torch.tensor(self.val_acc_list).mean().item()
-        self.log('val_acc', mean_acc, prog_bar=True)
-        self.history['val_loss'].append(mean_loss)
-        self.history['val_accuracy'].append(mean_acc)
+        self.log("val_acc", mean_acc, prog_bar=True)
+        self.history["val_loss"].append(mean_loss)
+        self.history["val_accuracy"].append(mean_acc)
         self.val_loss_list.clear()
         self.val_acc_list.clear()
 
@@ -103,18 +103,18 @@ class SequentialModule(L.LightningModule):
         y_hat = self(x)
         acc = self.metric(y_hat, y)
 
-        logs = {'test_acc': acc}
+        logs = {"test_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
 
 train_data = CIFAR10(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = CIFAR10(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -123,28 +123,28 @@ train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
 cnn = SequentialModule()
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=100)
+trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=100)
 trainer.fit(cnn, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-# trainer.save_checkpoint('cnn_cifar10.ckpt')
-# trainer.test(dmlp, dataloaders=test_loader, ckpt_path='cnn_cifar10.ckpt')
+# trainer.save_checkpoint("cnn_cifar10.ckpt")
+# trainer.test(dmlp, dataloaders=test_loader, ckpt_path="cnn_cifar10.ckpt")
 
-trainer.test(cnn, dataloaders=test_loader, ckpt_path='last')
+trainer.test(cnn, dataloaders=test_loader, ckpt_path="last")
 
-plt.plot(cnn.history['accuracy'])
-plt.plot(cnn.history['val_accuracy'])
-plt.title('Accuracy graph')
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.legend(['train', 'test'])
+plt.plot(cnn.history["accuracy"])
+plt.plot(cnn.history["val_accuracy"])
+plt.title("Accuracy graph")
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()
 
-plt.plot(cnn.history['loss'])
-plt.plot(cnn.history['val_loss'])
-plt.title('Loss graph')
-plt.xlabel('epochs')
-plt.ylabel('loss')
-plt.legend(['train', 'test'])
+plt.plot(cnn.history["loss"])
+plt.plot(cnn.history["val_loss"])
+plt.title("Loss graph")
+plt.xlabel("epochs")
+plt.ylabel("loss")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()

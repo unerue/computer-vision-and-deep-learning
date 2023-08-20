@@ -48,7 +48,7 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
         if batch % 100 == 0:
             loss = loss.item()
             current = batch * len(x)
-            print(f'loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]')
+            print(f"loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]")
 
     mean_acc = torch.tensor(acc_list).to(device).mean().item()
     return mean_acc
@@ -75,13 +75,13 @@ def test(dataloader, device, model, metric):
 
 
 train_data = MNIST(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = MNIST(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -89,29 +89,29 @@ test_data = MNIST(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 model_sgd = SequentialModel().to(device)
 loss_fn = nn.MSELoss()
 optimizer = optim.SGD(model_sgd.parameters(), lr=0.01)
-metric = Accuracy(task='multiclass', num_classes=10).to(device)
+metric = Accuracy(task="multiclass", num_classes=10).to(device)
 
 hist_sgd = defaultdict(list)
 max_epochs = 50
 for t in range(max_epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
+    print(f"Epoch {t+1}\n-------------------------------")
     train_acc = training_epoch(train_loader, device, model_sgd, loss_fn, optimizer, metric)
     val_acc = validation(test_loader, device, model_sgd, metric)
-    print('val 정확률=', val_acc * 100, '\n')
-    hist_sgd['accuracy'].append(train_acc)
-    hist_sgd['val_accuracy'].append(val_acc)
+    print("val 정확률=", val_acc * 100, "\n")
+    hist_sgd["accuracy"].append(train_acc)
+    hist_sgd["val_accuracy"].append(val_acc)
 
-torch.save(model_sgd.state_dict(), 'mnist-sgd.pth')
+torch.save(model_sgd.state_dict(), "mnist-sgd.pth")
 
 model_sgd = SequentialModel().to(device)
-model_sgd.load_state_dict(torch.load('mnist-sgd.pth'))
+model_sgd.load_state_dict(torch.load("mnist-sgd.pth"))
 
 test_acc = test(test_loader, device, model_sgd, metric)
-print('SGD 정확률=', test_acc * 100)
+print("SGD 정확률=", test_acc * 100)
 
 model_adam = SequentialModel().to(device)
 optimizer = optim.Adam(model_adam.parameters(), lr=0.001)
@@ -119,28 +119,28 @@ optimizer = optim.Adam(model_adam.parameters(), lr=0.001)
 hist_adam = defaultdict(list)
 max_epochs = 50
 for t in range(max_epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
+    print(f"Epoch {t+1}\n-------------------------------")
     train_acc = training_epoch(train_loader, device, model_adam, loss_fn, optimizer, metric)
     val_acc = validation(test_loader, device, model_adam, metric)
-    print('val 정확률=', val_acc * 100, '\n')
-    hist_adam['accuracy'].append(train_acc)
-    hist_adam['val_accuracy'].append(val_acc)
+    print("val 정확률=", val_acc * 100, "\n")
+    hist_adam["accuracy"].append(train_acc)
+    hist_adam["val_accuracy"].append(val_acc)
 
-torch.save(model_adam.state_dict(), 'mnist-adam.pth')
+torch.save(model_adam.state_dict(), "mnist-adam.pth")
 
 model_adam = SequentialModel().to(device)
-model_adam.load_state_dict(torch.load('mnist-adam.pth'))
+model_adam.load_state_dict(torch.load("mnist-adam.pth"))
 
-print('Adam 정확률=', test(test_loader, device, model_adam, metric) * 100)
+print("Adam 정확률=", test(test_loader, device, model_adam, metric) * 100)
 
-plt.plot(hist_sgd['accuracy'], 'r--')
-plt.plot(hist_sgd['val_accuracy'], 'r')
-plt.plot(hist_adam['accuracy'], 'b--')
-plt.plot(hist_adam['val_accuracy'], 'b')
-plt.title('Comparison of SGD and Adam optimizers')
+plt.plot(hist_sgd["accuracy"], "r--")
+plt.plot(hist_sgd["val_accuracy"], "r")
+plt.plot(hist_adam["accuracy"], "b--")
+plt.plot(hist_adam["val_accuracy"], "b")
+plt.title("Comparison of SGD and Adam optimizers")
 plt.ylim((0.7, 1.0))
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.legend(['train_sgd', 'val_sgd', 'train_adam', 'val_adam'])
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend(["train_sgd", "val_sgd", "train_adam", "val_adam"])
 plt.grid()
 plt.show()

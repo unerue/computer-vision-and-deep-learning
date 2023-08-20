@@ -11,7 +11,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
 
-torch.set_float32_matmul_precision('medium')
+torch.set_float32_matmul_precision("medium")
 
 
 class SequentialModule(L.LightningModule):
@@ -25,7 +25,7 @@ class SequentialModule(L.LightningModule):
             nn.Softmax(dim=1),
         )
         self.loss = nn.MSELoss()
-        self.metric = Accuracy(task='multiclass', num_classes=10)
+        self.metric = Accuracy(task="multiclass", num_classes=10)
 
         self.optimizer_name = optimizer_name
         
@@ -35,9 +35,9 @@ class SequentialModule(L.LightningModule):
         self.history = defaultdict(list)
 
     def configure_optimizers(self):
-        if self.optimizer_name == 'SGD':
+        if self.optimizer_name == "SGD":
             return optim.SGD(self.model.parameters(), lr=0.01)
-        elif self.optimizer_name == 'Adam':
+        elif self.optimizer_name == "Adam":
             return optim.Adam(self.model.parameters(), lr=0.001)
 
     def forward(self, x):
@@ -54,14 +54,14 @@ class SequentialModule(L.LightningModule):
         acc = self.metric(y_hat, y)
         self.train_acc_list.append(acc)
 
-        logs = {'train_loss': loss, 'train_acc': acc}
+        logs = {"train_loss": loss, "train_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return loss
     
     def on_train_epoch_end(self):
         mean_acc = torch.tensor(self.train_acc_list).mean().item()
-        self.history['accuracy'].append(mean_acc)
+        self.history["accuracy"].append(mean_acc)
         self.train_acc_list.clear()
 
     def validation_step(self, batch, batch_idx):
@@ -71,15 +71,15 @@ class SequentialModule(L.LightningModule):
         acc = self.metric(y_hat, y)
         self.val_acc_list.append(acc)
 
-        logs = {'val_acc': acc}
+        logs = {"val_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return logs
 
     def on_validation_epoch_end(self):
         mean_acc = torch.tensor(self.val_acc_list).mean().item()
-        self.log('val_acc', mean_acc, prog_bar=True)
-        self.history['val_accuracy'].append(mean_acc)
+        self.log("val_acc", mean_acc, prog_bar=True)
+        self.history["val_accuracy"].append(mean_acc)
         self.val_acc_list.clear()
 
     def test_step(self, batch, batch_idx):
@@ -88,18 +88,18 @@ class SequentialModule(L.LightningModule):
         y_hat = self(x)
         acc = self.metric(y_hat, y)
 
-        logs = {'test_acc': acc}
+        logs = {"test_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
 
 train_data = MNIST(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = MNIST(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -107,26 +107,26 @@ test_data = MNIST(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-model_sgd = SequentialModule('SGD')
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=50)
+model_sgd = SequentialModule("SGD")
+trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=50)
 trainer.fit(model_sgd, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-trainer.test(model_sgd, dataloaders=test_loader, ckpt_path='last')
+trainer.test(model_sgd, dataloaders=test_loader, ckpt_path="last")
 
-model_adam = SequentialModule('Adam')
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=50)
+model_adam = SequentialModule("Adam")
+trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=50)
 trainer.fit(model_adam, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-trainer.test(model_adam, dataloaders=test_loader, ckpt_path='last')
+trainer.test(model_adam, dataloaders=test_loader, ckpt_path="last")
 
-plt.plot(model_sgd.history['accuracy'], 'r--')
-plt.plot(model_sgd.history['val_accuracy'], 'r')
-plt.plot(model_adam.history['accuracy'], 'b--')
-plt.plot(model_adam.history['val_accuracy'], 'b')
-plt.title('Comparison of SGD and Adam optimizers')
+plt.plot(model_sgd.history["accuracy"], "r--")
+plt.plot(model_sgd.history["val_accuracy"], "r")
+plt.plot(model_adam.history["accuracy"], "b--")
+plt.plot(model_adam.history["val_accuracy"], "b")
+plt.title("Comparison of SGD and Adam optimizers")
 plt.ylim((0.7, 1.0))
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.legend(['train_sgd', 'val_sgd', 'train_adam', 'val_adam'])
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend(["train_sgd", "val_sgd", "train_adam", "val_adam"])
 plt.grid()
 plt.show()
