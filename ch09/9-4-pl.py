@@ -239,10 +239,10 @@ cb = ModelCheckpoint(
     mode="max"
 )
 trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=30, callbacks=cb)
-trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+# trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = UNetModule(num_classes=n_class).load_from_checkpoint("oxford_seg.ckpt").to(device)
+model = UNetModule.load_from_checkpoint("oxford_seg.ckpt", num_classes=n_class).to(device)
 
 preds = model(test_data[0][0].unsqueeze(0).to(device))
 preds = preds.cpu().detach().numpy()
