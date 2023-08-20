@@ -14,13 +14,13 @@ class SequentialModel(nn.Module):
             nn.ReLU(),
             nn.Conv2d(32, 32, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Conv2d(32, 64, 5),
             nn.ReLU(),
             nn.Conv2d(64, 64, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Flatten(),
             nn.Linear(576, 512),
@@ -52,7 +52,7 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
         if batch % 100 == 0:
             loss = loss.item()
             current = batch * len(x)
-            print(f'loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]')
+            print(f"loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]")
 
 
 def validation(dataloader, device, model, metric):
@@ -76,13 +76,13 @@ def test(dataloader, device, model, metric):
 
 
 train_data = MNIST(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = MNIST(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -90,23 +90,23 @@ test_data = MNIST(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 cnn = SequentialModel().to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(cnn.parameters(), lr=0.001)
-metric = Accuracy(task='multiclass', num_classes=10).to(device)
+metric = Accuracy(task="multiclass", num_classes=10).to(device)
 
 max_epochs = 100
 for t in range(max_epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
+    print(f"Epoch {t+1}\n-------------------------------")
     training_epoch(train_loader, device, cnn, loss_fn, optimizer, metric)
     val_acc = validation(test_loader, device, cnn, metric)
-    print('val 정확률=', val_acc * 100, '\n')
+    print("val 정확률=", val_acc * 100, "\n")
 
-torch.save(cnn.state_dict(), 'cnn_v2.pth')
+torch.save(cnn.state_dict(), "cnn_v2.pth")
 
 cnn = SequentialModel().to(device)
-cnn.load_state_dict(torch.load('cnn_v2.pth'))
+cnn.load_state_dict(torch.load("cnn_v2.pth"))
 
 res = test(test_loader, device, cnn, metric)
-print('정확률=', res * 100)
+print("정확률=", res * 100)

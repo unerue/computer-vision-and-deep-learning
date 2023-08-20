@@ -30,8 +30,11 @@ class Patches(layers.Layer):
             rates=[1, 1, 1, 1],
             padding="VALID",
         )
+        print(patches)
+        print(patches.shape)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        print(patches.shape)
         return patches
 
 
@@ -83,6 +86,7 @@ def create_vit_classifier():
 
 model = create_vit_classifier()
 model.layers[1].adapt(x_train)
+print(model.layers[1])
 
 model.compile(
     optimizer=Adam(),

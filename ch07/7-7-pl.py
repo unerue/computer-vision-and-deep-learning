@@ -8,7 +8,7 @@ import torch
 from torch import nn
 
 
-torch.set_float32_matmul_precision('medium')
+torch.set_float32_matmul_precision("medium")
 
 
 class SequentialModule(L.LightningModule):
@@ -31,8 +31,8 @@ class SequentialModule(L.LightningModule):
         return x
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = SequentialModule.load_from_checkpoint('dmlp_trained.ckpt').to(device)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = SequentialModule.load_from_checkpoint("dmlp_trained.ckpt").to(device)
 
 
 def reset():

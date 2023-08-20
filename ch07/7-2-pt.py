@@ -43,7 +43,7 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
         if batch % 100 == 0:
             loss = loss.item()
             current = batch * len(x)
-            print(f'loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]')
+            print(f"loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]")
 
 
 def validation(dataloader, device, model, metric):
@@ -67,13 +67,13 @@ def test(dataloader, device, model, metric):
 
 
 train_data = MNIST(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = MNIST(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -81,23 +81,23 @@ test_data = MNIST(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 model = SequentialModel().to(device)
 loss_fn = nn.MSELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
-metric = Accuracy(task='multiclass', num_classes=10).to(device)
+metric = Accuracy(task="multiclass", num_classes=10).to(device)
 
 max_epochs = 50
 for t in range(max_epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
+    print(f"Epoch {t+1}\n-------------------------------")
     training_epoch(train_loader, device, model, loss_fn, optimizer, metric)
     val_acc = validation(test_loader, device, model, metric)
-    print('val 정확률=', val_acc * 100, '\n')
+    print("val 정확률=", val_acc * 100, "\n")
 
-torch.save(model.state_dict(), 'mnist-net.pth')
+torch.save(model.state_dict(), "mnist-net.pth")
 
 model = SequentialModel().to(device)
-model.load_state_dict(torch.load('mnist-net.pth'))
+model.load_state_dict(torch.load("mnist-net.pth"))
 
 res = test(test_loader, device, model, metric)
-print('정확률=', res * 100)
+print("정확률=", res * 100)

@@ -5,12 +5,12 @@ from torchvision.transforms import ToTensor
 
 
 train_data = CIFAR10(
-    root='data',
+    root="data",
     train=True,
     download=True,
 )
 test_data = CIFAR10(
-    root='data',
+    root="data",
     train=False,
     download=True,
 )

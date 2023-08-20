@@ -15,13 +15,13 @@ class SequentialModel(nn.Module):
             nn.ReLU(),
             nn.Conv2d(32, 32, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Conv2d(32, 64, 5),
             nn.ReLU(),
             nn.Conv2d(64, 64, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(2, stride=2),
             nn.Dropout(0.25),
             nn.Flatten(),
             nn.Linear(576, 512),
@@ -35,9 +35,9 @@ class SequentialModel(nn.Module):
         return x
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 model = SequentialModel().to(device)
-model.load_state_dict(torch.load('cnn_v2.pth'))
+model.load_state_dict(torch.load("cnn_v2.pth"))
 
 
 def reset():

@@ -52,7 +52,7 @@ def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
         if batch % 100 == 0:
             loss = loss.item()
             current = batch * len(x)
-            print(f'loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]')
+            print(f"loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]")
 
     total_loss /= num_batches
     mean_acc = torch.tensor(acc_list).to(device).mean().item()
@@ -86,13 +86,13 @@ def test(dataloader, device, model, loss_fn, metric):
 
 
 train_data = CIFAR10(
-    root='data',
+    root="data",
     train=True,
     download=True,
     transform=ToTensor(),
 )
 test_data = CIFAR10(
-    root='data',
+    root="data",
     train=False,
     download=True,
     transform=ToTensor(),
@@ -100,45 +100,45 @@ test_data = CIFAR10(
 train_loader = DataLoader(train_data, batch_size=128)
 test_loader = DataLoader(test_data, batch_size=128)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 dmlp = SequentialModel().to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(dmlp.parameters(), lr=0.0001)
-metric = Accuracy(task='multiclass', num_classes=10).to(device)
+metric = Accuracy(task="multiclass", num_classes=10).to(device)
 
 max_epochs = 50
 history = defaultdict(list)
 for t in range(max_epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
+    print(f"Epoch {t+1}\n-------------------------------")
     train_loss, train_acc = training_epoch(train_loader, device, dmlp, loss_fn, optimizer, metric)
     val_loss, val_acc = validation(test_loader, device, dmlp, loss_fn, metric)
-    print('val 정확률=', val_acc * 100, '\n')
-    history['loss'].append(train_loss)
-    history['accuracy'].append(train_acc)
-    history['val_loss'].append(val_loss)
-    history['val_accuracy'].append(val_acc)
+    print("val 정확률=", val_acc * 100, "\n")
+    history["loss"].append(train_loss)
+    history["accuracy"].append(train_acc)
+    history["val_loss"].append(val_loss)
+    history["val_accuracy"].append(val_acc)
 
-torch.save(dmlp.state_dict(), 'dmlp_trained.pth')
+torch.save(dmlp.state_dict(), "dmlp_trained.pth")
 
 dmlp = SequentialModel().to(device)
-dmlp.load_state_dict(torch.load('dmlp_trained.pth'))
+dmlp.load_state_dict(torch.load("dmlp_trained.pth"))
 
-print('정확률=', test(test_loader, device, dmlp, loss_fn, metric) * 100)
+print("정확률=", test(test_loader, device, dmlp, loss_fn, metric) * 100)
 
-plt.plot(history['accuracy'])
-plt.plot(history['val_accuracy'])
-plt.title('Accuracy graph')
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.legend(['train', 'test'])
+plt.plot(history["accuracy"])
+plt.plot(history["val_accuracy"])
+plt.title("Accuracy graph")
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()
 
-plt.plot(history['loss'])
-plt.plot(history['val_loss'])
-plt.title('Loss graph')
-plt.xlabel('epochs')
-plt.ylabel('loss')
-plt.legend(['train', 'test'])
+plt.plot(history["loss"])
+plt.plot(history["val_loss"])
+plt.title("Loss graph")
+plt.xlabel("epochs")
+plt.ylabel("loss")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()

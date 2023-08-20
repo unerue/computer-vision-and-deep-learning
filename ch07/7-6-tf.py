@@ -35,7 +35,7 @@ hist = dmlp.fit(
 )
 print("정확률=", dmlp.evaluate(x_test, y_test, verbose=0)[1] * 100)
 
-# dmlp.save('dmlp_trained.h5')
+# dmlp.save("dmlp_trained.h5")
 
 import matplotlib.pyplot as plt
 

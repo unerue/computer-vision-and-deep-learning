@@ -14,7 +14,7 @@ from torchvision.models.densenet import DenseNet121_Weights, densenet121
 from torchvision.transforms import ToTensor
 
 
-torch.set_float32_matmul_precision('medium')
+torch.set_float32_matmul_precision("medium")
 
 
 class CNNModule(L.LightningModule):
@@ -31,7 +31,7 @@ class CNNModule(L.LightningModule):
             nn.Linear(1024, 120),
         )
         self.loss = nn.CrossEntropyLoss()
-        self.metric = Accuracy(task='multiclass', num_classes=120)
+        self.metric = Accuracy(task="multiclass", num_classes=120)
         
         self.train_loss_list = []
         self.train_acc_list = []
@@ -56,7 +56,7 @@ class CNNModule(L.LightningModule):
         self.train_loss_list.append(loss)
         self.train_acc_list.append(acc)
 
-        logs = {'train_loss': loss, 'train_acc': acc}
+        logs = {"train_loss": loss, "train_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return loss
@@ -64,8 +64,8 @@ class CNNModule(L.LightningModule):
     def on_train_epoch_end(self):
         mean_loss = torch.tensor(self.train_loss_list).mean().item()
         mean_acc = torch.tensor(self.train_acc_list).mean().item()
-        self.history['loss'].append(mean_loss)
-        self.history['accuracy'].append(mean_acc)
+        self.history["loss"].append(mean_loss)
+        self.history["accuracy"].append(mean_acc)
         self.train_loss_list.clear()
         self.train_acc_list.clear()
 
@@ -78,7 +78,7 @@ class CNNModule(L.LightningModule):
         self.val_loss_list.append(loss)
         self.val_acc_list.append(acc)
 
-        logs = {'val_acc': acc}
+        logs = {"val_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
         return logs
@@ -86,9 +86,9 @@ class CNNModule(L.LightningModule):
     def on_validation_epoch_end(self):
         mean_loss = torch.tensor(self.val_loss_list).mean().item()
         mean_acc = torch.tensor(self.val_acc_list).mean().item()
-        self.log('val_acc', mean_acc, prog_bar=True)
-        self.history['val_loss'].append(mean_loss)
-        self.history['val_accuracy'].append(mean_acc)
+        self.log("val_acc", mean_acc, prog_bar=True)
+        self.history["val_loss"].append(mean_loss)
+        self.history["val_accuracy"].append(mean_acc)
         self.val_loss_list.clear()
         self.val_acc_list.clear()
 
@@ -98,11 +98,11 @@ class CNNModule(L.LightningModule):
         y_hat = self(x)
         acc = self.metric(y_hat, y)
 
-        logs = {'test_acc': acc}
+        logs = {"test_acc": acc}
         self.log_dict(logs, prog_bar=True)
 
 
-data_path = pathlib.Path('datasets/stanford_dogs/images/images')
+data_path = pathlib.Path("datasets/stanford_dogs/images/images")
 
 transform = transforms.Compose([
     ToTensor(),
@@ -118,31 +118,31 @@ train_loader = DataLoader(train_ds, batch_size=16)
 test_loader = DataLoader(test_ds, batch_size=16)
 
 cnn = CNNModule()
-trainer = L.Trainer(accelerator='gpu', devices=1, max_epochs=200)
+trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=200)
 trainer.fit(cnn, train_dataloaders=train_loader, val_dataloaders=test_loader)
 
-trainer.save_checkpoint('cnn_for_stanford_dogs.ckpt')
-trainer.test(cnn, dataloaders=test_loader, ckpt_path='cnn_for_stanford_dogs.ckpt')
+trainer.save_checkpoint("cnn_for_stanford_dogs.ckpt")
+trainer.test(cnn, dataloaders=test_loader, ckpt_path="cnn_for_stanford_dogs.ckpt")
 
-# trainer.test(cnn, dataloaders=test_loader, ckpt_path='last')
+# trainer.test(cnn, dataloaders=test_loader, ckpt_path="last")
 
-with open('dog_species_names.txt', 'wb') as f:
+with open("dog_species_names.txt", "wb") as f:
     pickle.dump(ds.classes, f)
 
-plt.plot(cnn.history['accuracy'])
-plt.plot(cnn.history['val_accuracy'])
-plt.title('Accuracy graph')
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.legend(['train', 'test'])
+plt.plot(cnn.history["accuracy"])
+plt.plot(cnn.history["val_accuracy"])
+plt.title("Accuracy graph")
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()
 
-plt.plot(cnn.history['loss'])
-plt.plot(cnn.history['val_loss'])
-plt.title('Loss graph')
-plt.xlabel('epochs')
-plt.ylabel('loss')
-plt.legend(['train', 'test'])
+plt.plot(cnn.history["loss"])
+plt.plot(cnn.history["val_loss"])
+plt.title("Loss graph")
+plt.xlabel("epochs")
+plt.ylabel("loss")
+plt.legend(["train", "test"])
 plt.grid()
 plt.show()

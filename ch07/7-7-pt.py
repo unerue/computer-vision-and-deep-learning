@@ -27,9 +27,9 @@ class SequentialModel(nn.Module):
         return x
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 model = SequentialModel().to(device)
-model.load_state_dict(torch.load('dmlp_trained.pth'))
+model.load_state_dict(torch.load("dmlp_trained.pth"))
 
 
 def reset():

@@ -3,12 +3,17 @@ import random
 
 import cv2
 from PIL import Image
+import lightning as L
+from lightning.pytorch.callbacks import ModelCheckpoint
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
 from torchmetrics import Accuracy
 from torchvision import transforms
 from torchvision.transforms import ToTensor, PILToTensor
+
+
+torch.set_float32_matmul_precision("medium")
 
 
 input_dir = "./datasets/oxford_pets/images/images/"
@@ -148,41 +153,50 @@ class UNet(nn.Module):
         return outputs
 
 
-def training_epoch(dataloader, device, model, loss_fn, optimizer, metric):
-    size = len(dataloader.dataset)
-    model.train()
-    for batch, (x, y) in enumerate(dataloader):
-        x = x.to(device)
-        y = y.to(device)
+class UNetModule(L.LightningModule):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = UNet(num_classes=num_classes)
+        self.loss = nn.CrossEntropyLoss()
+        self.metric = Accuracy(task="multiclass", num_classes=num_classes)
+        
+        self.acc_list = []
 
-        y_hat = model(x)
-        loss = loss_fn(y_hat, y)
-        acc = metric(y_hat, y)
+    def configure_optimizers(self):
+        return optim.Adam(self.model.parameters(), lr=0.001)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    def forward(self, x):
+        x = self.model(x)
+        return x
 
-        if batch % 100 == 0:
-            loss = loss.item()
-            current = batch * len(x)
-            print(f"loss: {loss:>7f}, acc: {acc:>7f} [{current:>5d}/{size:>5d}]")
+    def training_step(self, batch, batch_idx):
+        x, y = batch
 
+        y_hat = self(x)
+        loss = self.loss(y_hat, y)
+        acc = self.metric(y_hat, y)
 
-def validation(dataloader, device, model, metric):
-    acc_list = []
-    model.eval()
-    with torch.no_grad():
-        for x, y in dataloader:
-            x = x.to(device)
-            y = y.to(device)
+        logs = {"train_loss": loss, "train_acc": acc}
+        self.log_dict(logs, prog_bar=True)
 
-            y_hat = model(x)
-            acc = metric(y_hat, y)
-            acc_list.append(acc)
+        return loss
 
-    mean_acc = torch.tensor(acc_list).to(device).mean().item()
-    return mean_acc
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+
+        y_hat = self(x)
+        acc = self.metric(y_hat, y)
+        self.acc_list.append(acc)
+
+        logs = {"val_acc": acc}
+        self.log_dict(logs, prog_bar=True)
+
+        return logs
+
+    def on_validation_epoch_end(self):
+        mean_acc = torch.tensor(self.acc_list).mean().item()
+        self.log("val_acc", mean_acc, prog_bar=True)
+        self.acc_list.clear()
 
 
 random.Random(1).shuffle(img_paths)
@@ -216,25 +230,19 @@ test_data = OxfordPets(
 train_loader = DataLoader(train_data, batch_size=batch_siz)
 test_loader = DataLoader(test_data, batch_size=batch_siz)
 
+model = UNetModule(num_classes=n_class)
+cb = ModelCheckpoint(
+    dirpath=".",
+    filename="oxford_seg",
+    monitor="val_acc",
+    save_top_k=1,
+    mode="max"
+)
+trainer = L.Trainer(accelerator="gpu", devices=1, max_epochs=30, callbacks=cb)
+# trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = UNet(num_classes=n_class).to(device)
-loss_fn = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-metric = Accuracy(task="multiclass", num_classes=n_class).to(device)
-
-max_epochs = 30
-best_acc = 0
-for t in range(max_epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    training_epoch(train_loader, device, model, loss_fn, optimizer, metric)
-    val_acc = validation(test_loader, device, model, metric)
-    print("val 정확률=", val_acc * 100, "\n")
-    if val_acc > best_acc:
-        torch.save(model.state_dict(), "oxford_seg.pth")
-        best_acc = val_acc
-
-model = UNet(num_classes=n_class).to(device)
-model.load_state_dict(torch.load("oxford_seg.pth"))
+model = UNetModule.load_from_checkpoint("oxford_seg.ckpt", num_classes=n_class).to(device)
 
 preds = model(test_data[0][0].unsqueeze(0).to(device))
 preds = preds.cpu().detach().numpy()
