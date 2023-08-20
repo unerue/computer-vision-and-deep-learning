@@ -35,14 +35,14 @@ label_paths = sorted(
 
 
 class OxfordPets(Dataset):
-    def __init__(self, img_paths, label_paths, train_transform=None, test_transform=None):
+    def __init__(self, img_paths, label_paths, transform=None, target_transform=None):
         super().__init__()
         self.img_paths = img_paths
         self.label_paths = label_paths
         assert len(self.img_paths) == len(self.label_paths)
 
-        self.train_transform = train_transform
-        self.test_transform = test_transform
+        self.transform = transform
+        self.target_transform = target_transform
 
     def __len__(self):
         return len(self.img_paths)
@@ -54,11 +54,11 @@ class OxfordPets(Dataset):
         img = Image.open(img_path).convert("RGB")
         label = Image.open(label_path).convert("L")
 
-        if self.train_transform is not None:
-            img = self.train_transform(img)
+        if self.transform is not None:
+            img = self.transform(img)
 
-        if self.test_transform is not None:
-            label = self.test_transform(label)
+        if self.target_transform is not None:
+            label = self.target_transform(label)
             label = label.squeeze(0).type(torch.LongTensor)
             label -= 1  # 부류 번호를 1,2,3에서 0,1,2로 변환
 
@@ -207,25 +207,25 @@ train_label_paths = label_paths[:-test_samples]
 test_img_paths = img_paths[-test_samples:]
 test_label_paths = label_paths[-test_samples:]
 
-train_transform = transforms.Compose([
+transform = transforms.Compose([
     ToTensor(),
     transforms.Resize(img_siz, antialias=True)
 ])
-test_transform = transforms.Compose([
+target_transform = transforms.Compose([
     PILToTensor(),
     transforms.Resize(img_siz, antialias=True)
 ])
 train_data = OxfordPets(
     train_img_paths, 
     train_label_paths, 
-    train_transform=train_transform,
-    test_transform=test_transform
+    transform=transform,
+    target_transform=target_transform
 )
 test_data = OxfordPets(
     test_img_paths, 
     test_label_paths, 
-    train_transform=train_transform,
-    test_transform=test_transform
+    transform=transform,
+    target_transform=target_transform
 )
 train_loader = DataLoader(train_data, batch_size=batch_siz)
 test_loader = DataLoader(test_data, batch_size=batch_siz)
