@@ -55,7 +55,7 @@ class OxfordPets(Dataset):
         if self.test_transform is not None:
             label = self.test_transform(label)
             label = label.squeeze(0).type(torch.LongTensor)
-            label -= 1
+            label -= 1  # 부류 번호를 1,2,3에서 0,1,2로 변환
 
         return img, label
 
