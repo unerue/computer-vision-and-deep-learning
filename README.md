@@ -1,1 +1,1 @@
-# computer-vision-course
+# Lecture 1083: Computer Vision
